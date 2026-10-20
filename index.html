@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>영어 단어 학습</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg1: #e53935;
+      --bg2: #c62828;
+      --ink: #1a2e35;
+      --muted: #5a727c;
+      --accent: #0d7a6f;
+      --accent-hover: #0a5f56;
+      --card: #ffffff;
+      --line: #c5d9e0;
+      --wrong: #b33a3a;
+      --right: #0d7a6f;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      font-family: "Noto Sans KR", "Outfit", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse 80% 50% at 10% 0%, #ff6659 0%, transparent 55%),
+        radial-gradient(ellipse 70% 45% at 90% 100%, #ef5350 0%, transparent 50%),
+        linear-gradient(160deg, var(--bg1), var(--bg2));
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem 3rem;
+    }
+
+    h1 {
+      font-family: "Outfit", sans-serif;
+      font-weight: 700;
+      font-size: clamp(1.6rem, 4vw, 2.2rem);
+      letter-spacing: -0.02em;
+      margin-bottom: 0.35rem;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-bottom: 1.75rem;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .tabs button {
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 500;
+      padding: 0.55rem 1.1rem;
+      border: 1.5px solid var(--line);
+      background: transparent;
+      color: var(--muted);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+
+    .tabs button.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .panel { width: min(420px, 100%); display: none; }
+    .panel.active { display: block; }
+
+    .card {
+      background: var(--card);
+      border: 1.5px solid var(--line);
+      border-radius: 16px;
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 0.75rem;
+      box-shadow: 0 8px 28px rgba(26, 46, 53, 0.08);
+    }
+
+    .word {
+      font-family: "Outfit", sans-serif;
+      font-size: clamp(2rem, 6vw, 2.75rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .pos {
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .meaning {
+      font-size: 1.25rem;
+      font-weight: 500;
+      color: var(--accent);
+      min-height: 1.6em;
+    }
+
+    .meaning.hidden { visibility: hidden; }
+
+    .progress {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin: 1rem 0 1.25rem;
+    }
+
+    .actions {
+      display: flex;
+      gap: 0.6rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .actions button,
+    .quiz-options button {
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 500;
+      padding: 0.7rem 1.2rem;
+      border-radius: 8px;
+      border: 1.5px solid var(--line);
+      background: var(--card);
+      color: var(--ink);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+
+    .actions button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .actions button.primary:hover { background: var(--accent-hover); }
+    .actions button:hover:not(.primary) { border-color: var(--accent); color: var(--accent); }
+
+    .quiz-prompt {
+      font-size: 1.05rem;
+      color: var(--muted);
+      margin-bottom: 0.25rem;
+    }
+
+    .quiz-options {
+      display: grid;
+      gap: 0.55rem;
+      margin-top: 1.25rem;
+    }
+
+    .quiz-options button {
+      width: 100%;
+      text-align: left;
+      padding: 0.85rem 1rem;
+    }
+
+    .quiz-options button:hover:not(:disabled) {
+      border-color: var(--accent);
+    }
+
+    .quiz-options button.correct {
+      background: #e6f5f2;
+      border-color: var(--right);
+      color: var(--right);
+    }
+
+    .quiz-options button.incorrect {
+      background: #fceeee;
+      border-color: var(--wrong);
+      color: var(--wrong);
+    }
+
+    .score {
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .feedback {
+      text-align: center;
+      margin-top: 0.85rem;
+      font-size: 0.95rem;
+      font-weight: 500;
+      min-height: 1.4em;
+    }
+  </style>
+</head>
+<body>
+  <h1>Word Lab</h1>
+  <p class="subtitle">영어 단어를 카드로 익히고, 퀴즈로 확인해 보세요</p>
+
+  <div class="tabs">
+    <button type="button" class="active" data-tab="flash">카드 학습</button>
+    <button type="button" data-tab="quiz">퀴즈</button>
+  </div>
+
+  <!-- 플래시카드 -->
+  <section id="flash" class="panel active">
+    <div class="card">
+      <div class="pos" id="f-pos"></div>
+      <div class="word" id="f-word"></div>
+      <div class="meaning hidden" id="f-meaning"></div>
+    </div>
+    <p class="progress" id="f-progress"></p>
+    <div class="actions">
+      <button type="button" id="f-prev">이전</button>
+      <button type="button" class="primary" id="f-toggle">뜻 보기</button>
+      <button type="button" id="f-next">다음</button>
+    </div>
+  </section>
+
+  <!-- 퀴즈 -->
+  <section id="quiz" class="panel">
+    <div class="card">
+      <p class="quiz-prompt">이 단어의 뜻은?</p>
+      <div class="word" id="q-word"></div>
+      <div class="quiz-options" id="q-options"></div>
+    </div>
+    <p class="feedback" id="q-feedback"></p>
+    <p class="score" id="q-score"></p>
+    <div class="actions" style="margin-top: 1rem;">
+      <button type="button" class="primary" id="q-next" disabled>다음 문제</button>
+    </div>
+  </section>
+
+  <script>
+    const WORDS = [
+      { en: "abandon", ko: "포기하다", pos: "동사" },
+      { en: "benefit", ko: "이익, 혜택", pos: "명사" },
+      { en: "curious", ko: "호기심 많은", pos: "형용사" },
+      { en: "diligent", ko: "부지런한", pos: "형용사" },
+      { en: "essential", ko: "필수적인", pos: "형용사" },
+      { en: "frequent", ko: "빈번한", pos: "형용사" },
+      { en: "grateful", ko: "감사하는", pos: "형용사" },
+      { en: "hesitate", ko: "망설이다", pos: "동사" },
+      { en: "improve", ko: "향상시키다", pos: "동사" },
+      { en: "journey", ko: "여행, 여정", pos: "명사" },
+      { en: "knowledge", ko: "지식", pos: "명사" },
+      { en: "loyal", ko: "충성스러운", pos: "형용사" },
+    ];
+
+    /* ----- 탭 ----- */
+    const tabs = document.querySelectorAll(".tabs button");
+    const panels = document.querySelectorAll(".panel");
+    tabs.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        tabs.forEach((b) => b.classList.remove("active"));
+        panels.forEach((p) => p.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById(btn.dataset.tab).classList.add("active");
+        if (btn.dataset.tab === "quiz") startQuiz();
+      });
+    });
+
+    /* ----- 플래시카드 ----- */
+    let idx = 0;
+    let shown = false;
+
+    const fWord = document.getElementById("f-word");
+    const fPos = document.getElementById("f-pos");
+    const fMeaning = document.getElementById("f-meaning");
+    const fProgress = document.getElementById("f-progress");
+    const fToggle = document.getElementById("f-toggle");
+
+    function renderFlash() {
+      const w = WORDS[idx];
+      fWord.textContent = w.en;
+      fPos.textContent = w.pos;
+      fMeaning.textContent = w.ko;
+      fMeaning.classList.toggle("hidden", !shown);
+      fToggle.textContent = shown ? "뜻 숨기기" : "뜻 보기";
+      fProgress.textContent = `${idx + 1} / ${WORDS.length}`;
+    }
+
+    fToggle.addEventListener("click", () => {
+      shown = !shown;
+      renderFlash();
+    });
+
+    document.getElementById("f-prev").addEventListener("click", () => {
+      idx = (idx - 1 + WORDS.length) % WORDS.length;
+      shown = false;
+      renderFlash();
+    });
+
+    document.getElementById("f-next").addEventListener("click", () => {
+      idx = (idx + 1) % WORDS.length;
+      shown = false;
+      renderFlash();
+    });
+
+    renderFlash();
+
+    /* ----- 퀴즈 ----- */
+    let qOrder = [];
+    let qIdx = 0;
+    let correctCount = 0;
+    let answered = false;
+
+    const qWord = document.getElementById("q-word");
+    const qOptions = document.getElementById("q-options");
+    const qFeedback = document.getElementById("q-feedback");
+    const qScore = document.getElementById("q-score");
+    const qNext = document.getElementById("q-next");
+
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function startQuiz() {
+      qOrder = shuffle(WORDS.map((_, i) => i));
+      qIdx = 0;
+      correctCount = 0;
+      answered = false;
+      qNext.disabled = true;
+      renderQuiz();
+    }
+
+    function renderQuiz() {
+      const w = WORDS[qOrder[qIdx]];
+      qWord.textContent = w.en;
+      qFeedback.textContent = "";
+      qScore.textContent = `점수 ${correctCount} / ${qIdx + (answered ? 1 : 0)} · 문제 ${qIdx + 1} / ${WORDS.length}`;
+      answered = false;
+      qNext.disabled = true;
+
+      const wrongs = shuffle(WORDS.filter((x) => x.en !== w.en)).slice(0, 3);
+      const opts = shuffle([w, ...wrongs]);
+
+      qOptions.innerHTML = "";
+      opts.forEach((opt) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.textContent = opt.ko;
+        btn.addEventListener("click", () => {
+          if (answered) return;
+          answered = true;
+          const isRight = opt.en === w.en;
+          if (isRight) {
+            correctCount++;
+            qFeedback.textContent = "정답입니다!";
+            qFeedback.style.color = "var(--right)";
+          } else {
+            qFeedback.textContent = `오답 · 정답: ${w.ko}`;
+            qFeedback.style.color = "var(--wrong)";
+          }
+          [...qOptions.children].forEach((b) => {
+            b.disabled = true;
+            if (b.textContent === w.ko) b.classList.add("correct");
+            else if (b === btn && !isRight) b.classList.add("incorrect");
+          });
+          qScore.textContent = `점수 ${correctCount} / ${qIdx + 1} · 문제 ${qIdx + 1} / ${WORDS.length}`;
+          qNext.disabled = false;
+          qNext.textContent = qIdx === WORDS.length - 1 ? "다시 시작" : "다음 문제";
+        });
+        qOptions.appendChild(btn);
+      });
+    }
+
+    qNext.addEventListener("click", () => {
+      if (qIdx >= WORDS.length - 1) {
+        startQuiz();
+        return;
+      }
+      qIdx++;
+      renderQuiz();
+    });
+  </script>
+</body>
+</html>
